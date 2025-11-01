@@ -48,15 +48,14 @@ export default function ChatPage() {
   const [selectedTopic, setSelectedTopic] = useState<IcebreakerTopic | null>(null);
   const [scoreResult, setScoreResult] = useState<ConfidenceScoreResponse | null>(null);
   const [optimizedMessage, setOptimizedMessage] = useState<string>('');
-  const [messageIdCounter, setMessageIdCounter] = useState(0);
+  const messageIdCounter = useRef(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // 生成唯一ID
+  // 生成唯一ID - 使用useRef确保同步访问
   const generateMessageId = () => {
-    const id = `${Date.now()}-${messageIdCounter}`;
-    setMessageIdCounter(prev => prev + 1);
-    return id;
+    messageIdCounter.current += 1;
+    return `${Date.now()}-${messageIdCounter.current}-${Math.random().toString(36).substr(2, 9)}`;
   };
 
   // 自动滚动到底部
@@ -66,7 +65,9 @@ export default function ChatPage() {
 
   // 初始化欢迎消息
   useEffect(() => {
-    addAIMessage('text', '👋 你好！我是你的破冰助手\n\n直接粘贴对方的profile，我会自动识别兴趣并生成最优开场白！\n\n或者手动添加兴趣标签也可以 →');
+    if (messages.length === 0) {
+      addAIMessage('text', '👋 你好！我是你的破冰助手\n\n直接粘贴对方的profile，我会自动识别兴趣并生成最优开场白！\n\n或者手动添加兴趣标签也可以 →');
+    }
   }, []);
 
   const addAIMessage = (type: Message['type'], content: string, data?: any) => {
@@ -293,99 +294,167 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-white">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative overflow-hidden">
+      {/* 3D动态背景 */}
+      <div className="fixed inset-0 pointer-events-none">
+        <motion.div
+          className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-blue-400/15 via-violet-400/15 to-purple-400/15 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.2, 1],
+            rotate: [0, 90, 0],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div
+          className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-pink-400/15 via-rose-400/15 to-red-400/15 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.3, 1],
+            rotate: [0, -90, 0],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+      </div>
+
+      <div className="container relative mx-auto px-4 py-8 max-w-5xl">
         {/* Header */}
-<div className="flex items-center justify-between mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between mb-8"
+        >
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <motion.h1
+              className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-violet-600 to-purple-600 bg-clip-text text-transparent"
+              whileHover={{ scale: 1.02 }}
+            >
               破冰助手
-            </h1>
-            <p className="text-gray-600 text-sm mt-1">粘贴profile → AI生成开场白 → 一键复制发送</p>
+            </motion.h1>
+            <p className="text-gray-600 text-sm mt-2 flex items-center gap-2">
+              <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              粘贴profile → AI生成开场白 → 一键复制发送
+            </p>
+            <p className="text-gray-500 text-xs mt-1">
+              想要更多控制？试试
+              <Link href="/generate" className="text-blue-600 hover:text-blue-700 mx-1 underline">话题生成器</Link>
+              或
+              <Link href="/confidence" className="text-blue-600 hover:text-blue-700 mx-1 underline">信心评估器</Link>
+            </p>
           </div>
           <div className="flex gap-2">
             <Link href="/library">
-              <Button variant="outline" size="sm">
-                <Archive className="w-4 h-4 mr-1" />
-                破冰库
-              </Button>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button variant="outline" size="sm" className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 shadow-sm">
+                  <Archive className="w-4 h-4 mr-1" />
+                  破冰库
+                </Button>
+              </motion.div>
             </Link>
             <Link href="/">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-1" />
-                首页
-              </Button>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 hover:bg-gray-100">
+                  <ArrowLeft className="w-4 h-4 mr-1" />
+                  首页
+                </Button>
+              </motion.div>
             </Link>
           </div>
-        </div>
+        </motion.div>
 
         {/* Chat Container */}
-        <Card className="h-[600px] flex flex-col">
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            <AnimatePresence mode="popLayout">
-              {messages.map((message, index) => (
-                <MessageBubble
-                  key={message.id}
-                  message={message}
-                  onSelectTopic={handleSelectTopic}
-                  onCopy={handleCopy}
-                />
-              ))}
-            </AnimatePresence>
-            <div ref={messagesEndRef} />
-          </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Card className="h-[650px] flex flex-col shadow-2xl border-0 bg-white/80 backdrop-blur-sm overflow-hidden">
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gradient-to-b from-white/50 to-transparent">
+              <AnimatePresence mode="popLayout">
+                {messages.map((message, index) => (
+                  <MessageBubble
+                    key={message.id}
+                    message={message}
+                    onSelectTopic={handleSelectTopic}
+                    onCopy={handleCopy}
+                  />
+                ))}
+              </AnimatePresence>
+              <div ref={messagesEndRef} />
+            </div>
 
-          {/* Input Area */}
-          <div className="border-t p-4 bg-gray-50">
+            {/* Input Area */}
+            <div className="border-t border-gray-200/50 p-5 bg-white/90 backdrop-blur-md">
             {state === 'WELCOME' || state === 'COLLECTING_INTERESTS' ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {/* 已选兴趣标签 */}
                 {interests.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pb-3 border-b">
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex flex-wrap gap-2 p-4 rounded-xl bg-gradient-to-r from-blue-50 to-violet-50 border border-blue-100"
+                  >
                     {interests.map((tag, idx) => (
-                      <Badge key={idx} variant="secondary" className="text-sm">
-                        {tag}
-                      </Badge>
+                      <motion.div
+                        key={idx}
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: idx * 0.1 }}
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        <Badge className="text-sm px-3 py-1 bg-gradient-to-r from-blue-600 to-violet-600 text-white border-0 shadow-sm">
+                          ✨ {tag}
+                        </Badge>
+                      </motion.div>
                     ))}
-                  </div>
+                  </motion.div>
                 )}
 
                 {/* Tabs切换输入模式 */}
                 <Tabs defaultValue="smart" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="smart">
+                  <TabsList className="grid w-full grid-cols-2 bg-gray-100/80 p-1">
+                    <TabsTrigger value="smart" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
                       <Wand2 className="w-4 h-4 mr-2" />
                       智能输入
                     </TabsTrigger>
-                    <TabsTrigger value="manual">手动输入</TabsTrigger>
+                    <TabsTrigger value="manual" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">手动输入</TabsTrigger>
                   </TabsList>
 
                   {/* 智能输入模式 */}
-                  <TabsContent value="smart" className="space-y-3">
-                    <div className="text-sm text-gray-600 mb-2">
-                      粘贴对方的profile，AI自动识别兴趣 ⚡
+                  <TabsContent value="smart" className="space-y-3 mt-4">
+                    <div className="text-sm text-gray-700 mb-2 flex items-center gap-2 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                      <Sparkles className="w-4 h-4 text-blue-600" />
+                      <span>粘贴对方的profile，AI自动识别兴趣</span>
                     </div>
                     <Textarea
                       value={profileText}
                       onChange={(e) => setProfileText(e.target.value)}
                       placeholder="例如：独立音乐爱好者，喜欢去咖啡馆看书，INFP性格，最近在读村上春树..."
-                      className="min-h-[100px] resize-none"
+                      className="min-h-[100px] resize-none border-blue-200 focus:border-blue-400 focus:ring-blue-400"
                       disabled={isExtracting}
                     />
-                    <Button
-                      onClick={handleExtractInterests}
-                      disabled={!profileText.trim() || isExtracting}
-                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600"
-                    >
-                      <Wand2 className="w-4 h-4 mr-2" />
-                      {isExtracting ? '识别中...' : '智能识别兴趣'}
-                    </Button>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button
+                        onClick={handleExtractInterests}
+                        disabled={!profileText.trim() || isExtracting}
+                        className="w-full bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white shadow-lg"
+                      >
+                        <Wand2 className="w-4 h-4 mr-2" />
+                        {isExtracting ? '识别中...' : '智能识别兴趣'}
+                      </Button>
+                    </motion.div>
                   </TabsContent>
 
                   {/* 手动输入模式 */}
-                  <TabsContent value="manual" className="space-y-3">
-                    <div className="text-sm text-gray-600 mb-2">
+                  <TabsContent value="manual" className="space-y-3 mt-4">
+                    <div className="text-sm text-gray-700 mb-2 bg-violet-50 p-3 rounded-lg border border-violet-100">
                       逐个添加兴趣标签（最多5个）
                     </div>
                     <div className="flex gap-2">
@@ -399,40 +468,76 @@ export default function ChatPage() {
                           }
                         }}
                         placeholder="例如：独立音乐、咖啡馆、INFP..."
-                        className="flex-1"
+                        className="flex-1 border-violet-200 focus:border-violet-400 focus:ring-violet-400"
                       />
-                      <Button
-                        onClick={handleAddInterest}
-                        disabled={!currentInput.trim() || interests.length >= 5}
-                      >
-                        添加
-                      </Button>
+                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <Button
+                          onClick={handleAddInterest}
+                          disabled={!currentInput.trim() || interests.length >= 5}
+                          className="bg-violet-600 hover:bg-violet-700 text-white"
+                        >
+                          添加
+                        </Button>
+                      </motion.div>
                     </div>
                   </TabsContent>
                 </Tabs>
 
                 {/* 生成开场白按钮 */}
                 {interests.length > 0 && (
-                  <Button
-                    onClick={handleGenerateTopics}
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600"
-                    size="lg"
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="relative"
                   >
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    生成开场白
-                  </Button>
+                    {/* 光晕效果 */}
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-blue-600 to-violet-600 rounded-xl blur-lg opacity-30"
+                      animate={{
+                        scale: [1, 1.05, 1],
+                        opacity: [0.3, 0.5, 0.3]
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button
+                        onClick={handleGenerateTopics}
+                        className="relative w-full bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white shadow-xl"
+                        size="lg"
+                      >
+                        <motion.div
+                          animate={{ rotate: [0, 15, 0] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                          className="mr-2"
+                        >
+                          <Sparkles className="w-5 h-5" />
+                        </motion.div>
+                        生成开场白
+                      </Button>
+                    </motion.div>
+                  </motion.div>
                 )}
               </div>
             ) : state === 'FINAL' ? (
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleRestart}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  重新开始
-                </Button>
-              </div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex gap-2"
+              >
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
+                  <Button
+                    onClick={handleRestart}
+                    variant="outline"
+                    className="w-full border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300"
+                  >
+                    重新开始
+                  </Button>
+                </motion.div>
+              </motion.div>
             ) : (
               <div className="text-center text-gray-500 text-sm">
                 AI正在处理中...
@@ -440,6 +545,7 @@ export default function ChatPage() {
             )}
           </div>
         </Card>
+        </motion.div>
       </div>
     </div>
   );
@@ -462,30 +568,41 @@ function MessageBubble({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
+      transition={{ type: "spring", stiffness: 200, damping: 20 }}
       className={`flex ${isAI ? 'justify-start' : 'justify-end'}`}
     >
-      <div className={`max-w-[80%] ${isAI ? '' : 'flex flex-col items-end'}`}>
+      <div className={`max-w-[85%] ${isAI ? '' : 'flex flex-col items-end'}`}>
         {/* AI标识 */}
         {isAI && (
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="flex items-center gap-2 mb-2"
+          >
+            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 via-violet-500 to-purple-500 flex items-center justify-center shadow-lg">
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <Sparkles className="w-4 h-4 text-white" />
+              </motion.div>
             </div>
-            <span className="text-sm font-medium text-gray-700">AI助手</span>
-          </div>
+            <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">AI助手</span>
+          </motion.div>
         )}
 
         {/* 消息内容 */}
         {message.type === 'text' && (
-          <div
-            className={`rounded-2xl px-4 py-3 ${
+          <motion.div
+            whileHover={{ scale: 1.01 }}
+            className={`rounded-2xl px-5 py-3 shadow-md ${
               isAI
-                ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-gray-800'
-                : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                ? 'bg-gradient-to-br from-blue-50 via-violet-50 to-purple-50 text-gray-800 border border-blue-100'
+                : 'bg-gradient-to-r from-blue-600 to-violet-600 text-white shadow-lg'
             }`}
           >
-            <p className="whitespace-pre-line">{message.content}</p>
-          </div>
+            <p className="whitespace-pre-line leading-relaxed">{message.content}</p>
+          </motion.div>
         )}
 
         {/* 话题卡片 */}
