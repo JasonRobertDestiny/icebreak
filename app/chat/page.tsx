@@ -146,7 +146,7 @@ export default function ChatPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: topic.openingLine,
+          message: topic.opener,
           targetInterests: interests,
           mode: 'full'
         })
@@ -164,14 +164,14 @@ export default function ChatPage() {
           setTimeout(() => {
             setState('FINAL');
             addAIMessage('final', '很棒！这个开场白已经很好了。复制并发送吧，相信自己！', {
-              message: topic.openingLine,
+              message: topic.opener,
               score: scoreData.finalScore
             });
           }, 1500);
         } else {
           addAIMessage('score', `评分：${scoreData.finalScore}分 - 我觉得可以更好一点`, scoreData);
           setTimeout(() => {
-            handleOptimize(topic.openingLine);
+            handleOptimize(topic.opener);
           }, 1000);
         }
       }, 1000);
@@ -379,7 +379,7 @@ function MessageBubble({
                   <span className="text-2xl">{topic.emoji}</span>
                 </div>
                 <p className="text-gray-700 leading-relaxed mb-3">
-                  {topic.openingLine}
+                  {topic.opener}
                 </p>
                 <div className="text-sm text-purple-600 font-medium">
                   点击选择 →
