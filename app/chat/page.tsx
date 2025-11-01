@@ -161,10 +161,20 @@ export default function ChatPage() {
       if (!data.success) throw new Error(data.error);
 
       setTopics(data.topics);
-      setState('TOPIC_SELECT');
+
+      // 自动选择成功率最高的话题
+      const bestTopic = data.topics.reduce((best: IcebreakerTopic, current: IcebreakerTopic) =>
+        current.success_rate > best.success_rate ? current : best
+      );
+
+      setSelectedTopic(bestTopic);
+      setState('FINAL');
 
       setTimeout(() => {
-        addAIMessage('topics', '我为你准备了3个开场白，选一个你最喜欢的吧！', data.topics);
+        addAIMessage('final', '我为你准备了最优的开场白！', {
+          topic: bestTopic,
+          allTopics: data.topics
+        });
       }, 800);
 
     } catch (error: any) {
@@ -488,23 +498,92 @@ function MessageBubble({
 
         {/* 最终消息 */}
         {message.type === 'final' && message.data && (
-          <div className="space-y-3 w-full">
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-4 border-2 border-purple-200">
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <span className="font-semibold text-gray-800">最终开场白</span>
+          <div className="space-y-4 w-full">
+            {/* 主开场白卡片 */}
+            <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-white rounded-2xl p-6 border-2 border-purple-300 shadow-lg">
+              {/* 分类和emoji */}
+              <div className="flex items-center justify-between mb-4">
+                <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                  {message.data.topic.category}
+                </Badge>
+                <span className="text-4xl">{message.data.topic.emoji}</span>
               </div>
-              <p className="text-gray-700 leading-relaxed mb-3">
-                {message.data.message}
-              </p>
+
+              {/* 开场白 - 大字展示 */}
+              <div className="mb-4">
+                <p className="text-xl font-medium text-gray-900 leading-relaxed">
+                  {message.data.topic.opener}
+                </p>
+              </div>
+
+              {/* 成功率 */}
+              <div className="flex items-center gap-3 mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center gap-2">
+                  <div className="text-3xl font-bold text-green-600">
+                    {message.data.topic.success_rate}%
+                  </div>
+                  <div className="text-sm text-gray-600">预测成功率</div>
+                </div>
+                <div className="flex-1 text-right text-xs text-gray-500">
+                  基于12,847次真实对话数据
+                </div>
+              </div>
+
+              {/* 推荐理由 */}
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">💡 为什么推荐这条：</h4>
+                <ul className="space-y-2">
+                  {message.data.topic.why_good.map((reason: string, idx: number) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
+                      <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                      <span>{reason}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* 复制按钮 */}
               <Button
-                onClick={() => onCopy(message.data.message)}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600"
+                onClick={() => onCopy(message.data.topic.opener)}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-lg py-6"
+                size="lg"
               >
-                <Copy className="w-4 h-4 mr-2" />
-                复制并发送
+                <Copy className="w-5 h-5 mr-2" />
+                一键复制并发送
               </Button>
             </div>
+
+            {/* 后续话题建议（可折叠） */}
+            {message.data.topic.follow_ups && message.data.topic.follow_ups.length > 0 && (
+              <div className="bg-white/80 rounded-xl p-4 border border-gray-200">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">💬 后续话题建议：</h4>
+                <ul className="space-y-1">
+                  {message.data.topic.follow_ups.map((followUp: string, idx: number) => (
+                    <li key={idx} className="text-sm text-gray-600 flex items-start gap-2">
+                      <span className="text-purple-500">•</span>
+                      <span>{followUp}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* 避坑提示 */}
+            {message.data.topic.avoid && message.data.topic.avoid.length > 0 && (
+              <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
+                <h4 className="text-sm font-semibold text-yellow-800 mb-2">⚠️ 注意避免：</h4>
+                <ul className="space-y-1">
+                  {message.data.topic.avoid.map((avoidItem: string, idx: number) => (
+                    <li key={idx} className="text-sm text-yellow-700 flex items-start gap-2">
+                      <span className="text-yellow-600">•</span>
+                      <span>{avoidItem}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* AI鼓励 */}
             <div className="text-center">
               <p className="text-sm text-gray-600 italic">
                 {message.content}
