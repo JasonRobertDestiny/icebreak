@@ -5,29 +5,19 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 
-const features = [
+const advancedFeatures = [
   {
-    title: "智能话题生成器",
-    description: "基于对方兴趣，AI生成3个个性化破冰开场白",
+    title: "话题生成器",
+    description: "单独生成破冰话题",
     icon: "💬",
     href: "/generate",
-    highlights: [
-      "3种对话风格可选",
-      "20+预设兴趣标签",
-      "3-retry智能重试"
-    ],
     color: "from-purple-500 to-pink-500"
   },
   {
-    title: "信心增强器",
-    description: "评估你的开场白，给出发送成功率和优化建议",
+    title: "信心评估器",
+    description: "单独评估开场白",
     icon: "✨",
     href: "/confidence",
-    highlights: [
-      "混合评分算法",
-      "4维度深度分析",
-      "实时AI反馈"
-    ],
     color: "from-pink-500 to-red-500"
   }
 ];
@@ -59,53 +49,66 @@ export default function HomePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center text-white mb-16"
+          className="text-center text-white mb-12"
         >
           <h1 className="text-5xl md:text-7xl font-bold mb-6">
             告别尴尬开场白
           </h1>
-          <p className="text-xl md:text-2xl mb-4 text-white/90">
-            AI驱动的破冰助手，3秒生成个性化开场白 + 给你发送的勇气
+          <p className="text-xl md:text-2xl mb-8 text-white/90">
+            像和朋友聊天一样，AI一步步帮你搞定开场白
           </p>
-          <p className="text-lg text-white/80 mb-8">
-            话题生成 × 信心评估 = 自信开启每一次对话
-          </p>
+          <Link href="/chat">
+            <Button
+              size="lg"
+              className="bg-white text-purple-600 hover:bg-gray-100 text-xl px-12 py-8 shadow-2xl hover:scale-105 transition-transform"
+            >
+              开始对话 →
+            </Button>
+          </Link>
         </motion.div>
 
-        {/* Feature Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-16">
-          {features.map((feature, index) => (
-            <motion.div
-              key={feature.title}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.2 + 0.3 }}
-            >
-              <Link href={feature.href}>
-                <Card className={`p-8 bg-white/95 backdrop-blur-sm hover:shadow-2xl transition-all hover:scale-105 cursor-pointer h-full`}>
-                  <div className="text-5xl mb-4">{feature.icon}</div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    {feature.description}
-                  </p>
-                  <ul className="space-y-2 mb-6">
-                    {feature.highlights.map((highlight, idx) => (
-                      <li key={idx} className="flex items-center text-sm text-gray-700">
-                        <span className="text-green-500 mr-2">✓</span>
-                        {highlight}
-                      </li>
-                    ))}
-                  </ul>
-                  <div className={`inline-block px-4 py-2 rounded-lg bg-gradient-to-r ${feature.color} text-white font-semibold`}>
-                    立即体验 →
-                  </div>
-                </Card>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
+        {/* How It Works */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="max-w-3xl mx-auto mb-16"
+        >
+          <Card className="p-8 bg-white/95 backdrop-blur-sm">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+              对话式体验，简单三步
+            </h2>
+            <div className="space-y-4">
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                  1
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900 mb-1">告诉AI对方的兴趣</h3>
+                  <p className="text-gray-600 text-sm">独立音乐、咖啡馆、INFP...想到什么说什么</p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                  2
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900 mb-1">AI生成3个开场白，你选一个</h3>
+                  <p className="text-gray-600 text-sm">AI自动评估成功率，分数低会主动帮你优化</p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                  3
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900 mb-1">复制并发送，搞定！</h3>
+                  <p className="text-gray-600 text-sm">整个过程30秒，AI会一直鼓励你</p>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
 
         {/* Pain Points Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
@@ -127,38 +130,25 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* How It Works */}
+        {/* Advanced Mode */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.8 }}
-          className="text-center mt-16 mb-12"
+          className="text-center mt-16"
         >
-          <h2 className="text-3xl font-bold text-white mb-8">
-            简单三步，开启自信对话
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="text-white">
-              <div className="text-4xl mb-4">1️⃣</div>
-              <h3 className="text-xl font-semibold mb-2">选择兴趣</h3>
-              <p className="text-white/80">
-                输入对方的兴趣标签，支持20+预设选项或自定义
-              </p>
-            </div>
-            <div className="text-white">
-              <div className="text-4xl mb-4">2️⃣</div>
-              <h3 className="text-xl font-semibold mb-2">AI生成</h3>
-              <p className="text-white/80">
-                3秒内获得3个个性化开场白，可选不同对话风格
-              </p>
-            </div>
-            <div className="text-white">
-              <div className="text-4xl mb-4">3️⃣</div>
-              <h3 className="text-xl font-semibold mb-2">信心评估</h3>
-              <p className="text-white/80">
-                实时评分+优化建议，让你知道发送成功率有多高
-              </p>
-            </div>
+          <p className="text-white/70 text-sm mb-4">需要更多控制？</p>
+          <div className="flex gap-4 justify-center">
+            {advancedFeatures.map((feature) => (
+              <Link key={feature.title} href={feature.href}>
+                <Button
+                  variant="outline"
+                  className="bg-white/10 text-white border-white/30 hover:bg-white/20"
+                >
+                  {feature.icon} {feature.title}
+                </Button>
+              </Link>
+            ))}
           </div>
         </motion.div>
 
@@ -169,17 +159,6 @@ export default function HomePage() {
           transition={{ duration: 0.6, delay: 1.0 }}
           className="text-center text-white/70 text-sm mt-16 pt-8 border-t border-white/20"
         >
-          <p className="mb-2">
-            Built with ❤️ using{' '}
-            <a
-              href="https://claude.com/claude-code"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-white"
-            >
-              Claude Code
-            </a>
-          </p>
           <p>
             <a
               href="https://github.com/JasonRobertDestiny/icebreak"
