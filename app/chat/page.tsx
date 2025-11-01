@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Sparkles, Send, Copy, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Sparkles, Send, Copy, CheckCircle, ArrowLeft, Wand2 } from 'lucide-react';
 import { IcebreakerTopic, ConversationStyle } from '@/lib/types/icebreaker';
 import { ConfidenceScoreResponse } from '@/app/api/confidence-score/route';
 import { toast } from 'sonner';
@@ -38,6 +40,8 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [interests, setInterests] = useState<string[]>([]);
   const [currentInput, setCurrentInput] = useState('');
+  const [profileText, setProfileText] = useState('');
+  const [isExtracting, setIsExtracting] = useState(false);
   const [style, setStyle] = useState<ConversationStyle>('sincere');
   const [topics, setTopics] = useState<IcebreakerTopic[]>([]);
   const [selectedTopic, setSelectedTopic] = useState<IcebreakerTopic | null>(null);
@@ -96,6 +100,43 @@ export default function ChatPage() {
       setTimeout(() => {
         addAIMessage('text', '很好！还有其他兴趣吗？（最多5个）\n或者点击"生成开场白"继续 →');
       }, 500);
+    }
+  };
+
+  // 智能提取兴趣
+  const handleExtractInterests = async () => {
+    if (!profileText.trim()) {
+      toast.error('请粘贴对方的profile');
+      return;
+    }
+
+    setIsExtracting(true);
+    addUserMessage(`粘贴了profile：\n${profileText.substring(0, 100)}${profileText.length > 100 ? '...' : ''}`);
+    addAIMessage('text', '让我看看...正在分析兴趣标签 🔍');
+
+    try {
+      const response = await fetch('/api/extract-interests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profileText })
+      });
+
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error);
+
+      setInterests(data.interests);
+      setProfileText('');
+      setState('COLLECTING_INTERESTS');
+
+      setTimeout(() => {
+        addAIMessage('text', `识别到了这些兴趣：${data.interests.join('、')}\n\n需要修改的话可以手动调整，否则直接生成开场白吧！`);
+      }, 800);
+
+    } catch (error: any) {
+      toast.error(error.message || '提取失败，请手动输入');
+      addAIMessage('text', '抱歉，识别失败了。要不要手动输入兴趣标签？');
+    } finally {
+      setIsExtracting(false);
     }
   };
 
@@ -260,45 +301,86 @@ export default function ChatPage() {
               <div className="space-y-3">
                 {/* 已选兴趣标签 */}
                 {interests.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 pb-3 border-b">
                     {interests.map((tag, idx) => (
-                      <Badge key={idx} variant="secondary">
+                      <Badge key={idx} variant="secondary" className="text-sm">
                         {tag}
                       </Badge>
                     ))}
                   </div>
                 )}
 
-                {/* 输入框 */}
-                <div className="flex gap-2">
-                  <Input
-                    value={currentInput}
-                    onChange={(e) => setCurrentInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddInterest();
-                      }
-                    }}
-                    placeholder="例如：独立音乐、咖啡馆、INFP..."
-                    className="flex-1"
-                  />
-                  <Button
-                    onClick={handleAddInterest}
-                    disabled={!currentInput.trim() || interests.length >= 5}
-                  >
-                    添加
-                  </Button>
-                  {interests.length > 0 && (
+                {/* Tabs切换输入模式 */}
+                <Tabs defaultValue="smart" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="smart">
+                      <Wand2 className="w-4 h-4 mr-2" />
+                      智能输入
+                    </TabsTrigger>
+                    <TabsTrigger value="manual">手动输入</TabsTrigger>
+                  </TabsList>
+
+                  {/* 智能输入模式 */}
+                  <TabsContent value="smart" className="space-y-3">
+                    <div className="text-sm text-gray-600 mb-2">
+                      粘贴对方的profile，AI自动识别兴趣 ⚡
+                    </div>
+                    <Textarea
+                      value={profileText}
+                      onChange={(e) => setProfileText(e.target.value)}
+                      placeholder="例如：独立音乐爱好者，喜欢去咖啡馆看书，INFP性格，最近在读村上春树..."
+                      className="min-h-[100px] resize-none"
+                      disabled={isExtracting}
+                    />
                     <Button
-                      onClick={handleGenerateTopics}
-                      className="bg-gradient-to-r from-purple-600 to-pink-600"
+                      onClick={handleExtractInterests}
+                      disabled={!profileText.trim() || isExtracting}
+                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600"
                     >
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      生成开场白
+                      <Wand2 className="w-4 h-4 mr-2" />
+                      {isExtracting ? '识别中...' : '智能识别兴趣'}
                     </Button>
-                  )}
-                </div>
+                  </TabsContent>
+
+                  {/* 手动输入模式 */}
+                  <TabsContent value="manual" className="space-y-3">
+                    <div className="text-sm text-gray-600 mb-2">
+                      逐个添加兴趣标签（最多5个）
+                    </div>
+                    <div className="flex gap-2">
+                      <Input
+                        value={currentInput}
+                        onChange={(e) => setCurrentInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddInterest();
+                          }
+                        }}
+                        placeholder="例如：独立音乐、咖啡馆、INFP..."
+                        className="flex-1"
+                      />
+                      <Button
+                        onClick={handleAddInterest}
+                        disabled={!currentInput.trim() || interests.length >= 5}
+                      >
+                        添加
+                      </Button>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+
+                {/* 生成开场白按钮 */}
+                {interests.length > 0 && (
+                  <Button
+                    onClick={handleGenerateTopics}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600"
+                    size="lg"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    生成开场白
+                  </Button>
+                )}
               </div>
             ) : state === 'FINAL' ? (
               <div className="flex gap-2">
