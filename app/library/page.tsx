@@ -54,9 +54,9 @@ export default function LibraryPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              历史记录
+              破冰库
             </h1>
-            <p className="text-gray-600 text-sm mt-1">查看你的破冰历史和成功率</p>
+            <p className="text-gray-600 text-sm mt-1">查看你的破冰历史和成功率统计</p>
           </div>
           <Link href="/chat">
             <Button variant="ghost" size="sm">

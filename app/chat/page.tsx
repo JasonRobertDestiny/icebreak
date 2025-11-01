@@ -307,7 +307,7 @@ export default function ChatPage() {
             <Link href="/library">
               <Button variant="outline" size="sm">
                 <Archive className="w-4 h-4 mr-1" />
-                历史
+                破冰库
               </Button>
             </Link>
             <Link href="/">
