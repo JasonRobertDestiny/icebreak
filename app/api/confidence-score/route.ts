@@ -9,10 +9,18 @@ import {
   SemanticScoreResponse
 } from '@/lib/prompts/confidence';
 
-const client = new OpenAI({
-  baseURL: process.env.DEEPSEEK_API_BASE || 'https://newapi.deepwisdom.ai/v1',
-  apiKey: process.env.DEEPSEEK_API_KEY
-});
+// 延迟初始化OpenAI客户端，避免构建时报错
+let client: OpenAI | null = null;
+
+function getClient(): OpenAI {
+  if (!client) {
+    client = new OpenAI({
+      baseURL: process.env.DEEPSEEK_API_BASE || 'https://newapi.deepwisdom.ai/v1',
+      apiKey: process.env.DEEPSEEK_API_KEY
+    });
+  }
+  return client;
+}
 
 // 请求体类型
 interface ConfidenceScoreRequestBody {
@@ -72,7 +80,7 @@ async function getSemanticScore(request: SemanticScoreRequest): Promise<Semantic
   const userPrompt = buildSemanticScoreUserPrompt(request);
 
   try {
-    const response = await client.chat.completions.create({
+    const response = await getClient().chat.completions.create({
       model: 'deepseek-chat',
       messages: [
         { role: 'system', content: systemPrompt },

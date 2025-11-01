@@ -3,10 +3,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { buildSystemPrompt, buildUserPrompt } from '@/lib/prompts/icebreaker';
 import { GenerateRequest, GenerateResponse, IcebreakerTopic } from '@/lib/types/icebreaker';
 
-const client = new OpenAI({
-  baseURL: process.env.DEEPSEEK_API_BASE || 'https://newapi.deepwisdom.ai/v1',
-  apiKey: process.env.DEEPSEEK_API_KEY
-});
+// 延迟初始化OpenAI客户端，避免构建时报错
+let client: OpenAI | null = null;
+
+function getClient(): OpenAI {
+  if (!client) {
+    client = new OpenAI({
+      baseURL: process.env.DEEPSEEK_API_BASE || 'https://newapi.deepwisdom.ai/v1',
+      apiKey: process.env.DEEPSEEK_API_KEY
+    });
+  }
+  return client;
+}
 
 // 3-retry指数退避配置
 const RETRY_DELAYS = [1000, 2000, 4000]; // 1s, 2s, 4s
@@ -31,7 +39,7 @@ async function callDeepSeekWithRetry(
 
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      const response = await client.chat.completions.create({
+      const response = await getClient().chat.completions.create({
         model: 'deepseek-chat',
         messages: [
           { role: 'system', content: systemPrompt },
