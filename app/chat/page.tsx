@@ -8,9 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Sparkles, Send, Copy, CheckCircle, ArrowLeft, Wand2 } from 'lucide-react';
+import { Sparkles, Send, Copy, CheckCircle, ArrowLeft, Wand2, Archive } from 'lucide-react';
 import { IcebreakerTopic, ConversationStyle } from '@/lib/types/icebreaker';
 import { ConfidenceScoreResponse } from '@/app/api/confidence-score/route';
+import { IcebreakerLibrary } from '@/lib/utils/icebreaker-library';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -252,9 +253,23 @@ export default function ChatPage() {
   };
 
   // 复制消息
-  const handleCopy = (text: string) => {
+  const handleCopy = (text: string, topic?: IcebreakerTopic) => {
     navigator.clipboard.writeText(text);
     toast.success('已复制到剪贴板！');
+
+    // 保存到破冰库
+    if (topic && interests.length > 0) {
+      IcebreakerLibrary.add({
+        interests,
+        opener: topic.opener,
+        category: topic.category,
+        emoji: topic.emoji,
+        success_rate: topic.success_rate
+      });
+      toast.success('已保存到破冰库', {
+        description: '可在破冰库中查看历史记录'
+      });
+    }
   };
 
   // 重新开始
@@ -280,12 +295,20 @@ export default function ChatPage() {
             </h1>
             <p className="text-gray-600 text-sm mt-1">AI帮你想开场白，还告诉你行不行</p>
           </div>
-          <Link href="/">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              返回
-            </Button>
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/library">
+              <Button variant="outline" size="sm">
+                <Archive className="w-4 h-4 mr-1" />
+                破冰库
+              </Button>
+            </Link>
+            <Link href="/">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                返回
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Chat Container */}
@@ -422,7 +445,7 @@ function MessageBubble({
 }: {
   message: Message;
   onSelectTopic: (topic: IcebreakerTopic) => void;
-  onCopy: (text: string) => void;
+  onCopy: (text: string, topic?: IcebreakerTopic) => void;
 }) {
   const isAI = message.role === 'ai';
 
@@ -544,7 +567,7 @@ function MessageBubble({
 
               {/* 复制按钮 */}
               <Button
-                onClick={() => onCopy(message.data.topic.opener)}
+                onClick={() => onCopy(message.data.topic.opener, message.data.topic)}
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-lg py-6"
                 size="lg"
               >
