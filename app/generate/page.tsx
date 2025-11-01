@@ -7,7 +7,10 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import InterestInput from '@/components/icebreaker/InterestInput';
 import { TopicCard } from '@/components/icebreaker/TopicCard';
+import { TopicCardSkeletonGrid } from '@/components/icebreaker/TopicCardSkeleton';
+import { ApiErrorState } from '@/components/ui/error-state';
 import { ConversationStyle, IcebreakerTopic } from '@/lib/types/icebreaker';
+import { addTopicHistory } from '@/lib/storage/history';
 import { toast } from 'sonner';
 
 export default function GeneratePage() {
@@ -16,6 +19,7 @@ export default function GeneratePage() {
   const [style, setStyle] = useState<ConversationStyle>('sincere');
   const [loading, setLoading] = useState(false);
   const [topics, setTopics] = useState<IcebreakerTopic[]>([]);
+  const [error, setError] = useState<Error | null>(null);
 
   const handleGenerate = async () => {
     if (interests.length === 0) {
@@ -25,6 +29,7 @@ export default function GeneratePage() {
 
     setLoading(true);
     setTopics([]);
+    setError(null);
 
     try {
       const response = await fetch('/api/generate-icebreaker', {
@@ -43,11 +48,17 @@ export default function GeneratePage() {
         throw new Error(data.error || '生成失败');
       }
 
-      setTopics(data.topics || []);
+      const generatedTopics = data.topics || [];
+      setTopics(generatedTopics);
+
+      // 保存到历史记录
+      addTopicHistory(interests, style, generatedTopics);
+
       toast.success('成功生成3个破冰话题！');
 
     } catch (error: any) {
       console.error('Generate error:', error);
+      setError(error);
       toast.error(error.message || 'AI生成失败，请稍后重试');
     } finally {
       setLoading(false);
@@ -161,7 +172,11 @@ export default function GeneratePage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            {topics.length === 0 ? (
+            {loading ? (
+              <TopicCardSkeletonGrid />
+            ) : error ? (
+              <ApiErrorState error={error} onRetry={handleGenerate} />
+            ) : topics.length === 0 ? (
               <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-12 shadow-xl h-full flex items-center justify-center">
                 <div className="text-center text-gray-400">
                   <Sparkles className="w-16 h-16 mx-auto mb-4 opacity-50" />

@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { ConfidenceMeter } from '@/components/confidence/ConfidenceMeter';
+import { ApiErrorState } from '@/components/ui/error-state';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ConfidenceScoreResponse } from '@/app/api/confidence-score/route';
+import { addConfidenceHistory } from '@/lib/storage/history';
 import { Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -16,6 +18,7 @@ export default function ConfidencePage() {
   const [customInterest, setCustomInterest] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<ConfidenceScoreResponse | null>(null);
+  const [error, setError] = useState<Error | null>(null);
 
   // 添加兴趣标签
   const addInterest = (tag: string) => {
@@ -43,6 +46,7 @@ export default function ConfidencePage() {
 
     setIsAnalyzing(true);
     setResult(null);
+    setError(null);
 
     try {
       const response = await fetch('/api/confidence-score', {
@@ -62,6 +66,9 @@ export default function ConfidencePage() {
       const data: ConfidenceScoreResponse = await response.json();
       setResult(data);
 
+      // 保存到历史记录
+      addConfidenceHistory(message, data);
+
       // 根据分数显示toast
       if (data.finalScore >= 80) {
         toast.success('很棒的开场白！');
@@ -71,8 +78,9 @@ export default function ConfidencePage() {
         toast.warning('建议重新思考开场白');
       }
 
-    } catch (error) {
-      console.error('Confidence analysis failed:', error);
+    } catch (err: any) {
+      console.error('Confidence analysis failed:', err);
+      setError(err);
       toast.error('分析失败，请重试');
     } finally {
       setIsAnalyzing(false);
