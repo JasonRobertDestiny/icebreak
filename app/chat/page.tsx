@@ -48,8 +48,16 @@ export default function ChatPage() {
   const [selectedTopic, setSelectedTopic] = useState<IcebreakerTopic | null>(null);
   const [scoreResult, setScoreResult] = useState<ConfidenceScoreResponse | null>(null);
   const [optimizedMessage, setOptimizedMessage] = useState<string>('');
+  const [messageIdCounter, setMessageIdCounter] = useState(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // 生成唯一ID
+  const generateMessageId = () => {
+    const id = `${Date.now()}-${messageIdCounter}`;
+    setMessageIdCounter(prev => prev + 1);
+    return id;
+  };
 
   // 自动滚动到底部
   useEffect(() => {
@@ -58,12 +66,12 @@ export default function ChatPage() {
 
   // 初始化欢迎消息
   useEffect(() => {
-    addAIMessage('text', '你好！我是你的破冰助手 ✨\n\n告诉我对方的兴趣爱好，我来帮你想一个完美的开场白！');
+    addAIMessage('text', '👋 你好！我是你的破冰助手\n\n直接粘贴对方的profile，我会自动识别兴趣并生成最优开场白！\n\n或者手动添加兴趣标签也可以 →');
   }, []);
 
   const addAIMessage = (type: Message['type'], content: string, data?: any) => {
     const message: Message = {
-      id: Date.now().toString(),
+      id: generateMessageId(),
       role: 'ai',
       type,
       content,
@@ -75,7 +83,7 @@ export default function ChatPage() {
 
   const addUserMessage = (content: string) => {
     const message: Message = {
-      id: Date.now().toString(),
+      id: generateMessageId(),
       role: 'user',
       type: 'text',
       content,
@@ -288,24 +296,24 @@ export default function ChatPage() {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-white">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+<div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
               破冰助手
             </h1>
-            <p className="text-gray-600 text-sm mt-1">AI帮你想开场白，还告诉你行不行</p>
+            <p className="text-gray-600 text-sm mt-1">粘贴profile → AI生成开场白 → 一键复制发送</p>
           </div>
           <div className="flex gap-2">
             <Link href="/library">
               <Button variant="outline" size="sm">
                 <Archive className="w-4 h-4 mr-1" />
-                破冰库
+                历史
               </Button>
             </Link>
             <Link href="/">
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="w-4 h-4 mr-1" />
-                返回
+                首页
               </Button>
             </Link>
           </div>

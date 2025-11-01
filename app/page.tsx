@@ -8,22 +8,7 @@ import { motion } from 'framer-motion';
 import { Sparkles, TrendingUp, Users, CheckCircle2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-const advancedFeatures = [
-  {
-    title: "话题生成器",
-    description: "单独生成破冰话题",
-    icon: "💬",
-    href: "/generate",
-    color: "from-purple-500 to-pink-500"
-  },
-  {
-    title: "信心评估器",
-    description: "单独评估开场白",
-    icon: "✨",
-    href: "/confidence",
-    color: "from-pink-500 to-red-500"
-  }
-];
+// 移除高级功能入口 - 所有功能已整合到 /chat
 
 // 实时成功案例（模拟数据）
 const successCases = [
@@ -237,33 +222,11 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Advanced Mode */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-          className="text-center mt-16"
-        >
-          <p className="text-white/70 text-sm mb-4">需要更多控制？</p>
-          <div className="flex gap-4 justify-center">
-            {advancedFeatures.map((feature) => (
-              <Link key={feature.title} href={feature.href}>
-                <Button
-                  variant="outline"
-                  className="bg-white/10 text-white border-white/30 hover:bg-white/20"
-                >
-                  {feature.icon} {feature.title}
-                </Button>
-              </Link>
-            ))}
-          </div>
-        </motion.div>
-
         {/* Footer */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 1.0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
           className="text-center text-white/70 text-sm mt-16 pt-8 border-t border-white/20"
         >
           <p>

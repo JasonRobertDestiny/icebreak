@@ -47,7 +47,13 @@ export async function POST(request: Request) {
     });
 
     if (!response.ok) {
-      throw new Error('DeepSeek API调用失败');
+      const errorText = await response.text();
+      console.error('DeepSeek API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText
+      });
+      throw new Error(`DeepSeek API调用失败: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
